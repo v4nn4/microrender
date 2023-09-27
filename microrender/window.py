@@ -16,7 +16,7 @@ class Window:
         self._width = width
         self._height = height
 
-    def _get_embedded_coordinates(self, i: int, j: int) -> Point:
+    def _to_world_point(self, i: int, j: int) -> Point:
         x = (i - self._width / 2) / self._width
         y = (j - self._height / 2) / self._height
         return Point(x, y, 0)
@@ -28,8 +28,8 @@ class Window:
         kernel = gaussian_kernel(beta)
         for i in range(width):
             for j in range(height):
-                vertex = self._get_embedded_coordinates(i, j)
-                distance = vertices.distance(vertex)
-                color = np.maximum(0, np.minimum(255, kernel(distance) * 255))
+                point = self._to_world_point(i, j)
+                distance = vertices.distance(point)
+                color = np.clip(kernel(distance) * 255, 0, 255)
                 window[i, j, :] = [color] * 3
         return Image.fromarray(window)

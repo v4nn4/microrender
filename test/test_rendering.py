@@ -1,5 +1,5 @@
 from microrender.point import Point
-from microrender.render import Window
+from microrender.window import Window
 from microrender.vertices import Vertices
 
 

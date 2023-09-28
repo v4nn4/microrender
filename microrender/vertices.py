@@ -3,6 +3,7 @@ import typing
 import numpy as np
 import open3d as o3d
 
+from .matrix import Matrix
 from .point import Point
 from .quaternion import Quaternion
 
@@ -24,12 +25,18 @@ class Vertices:
     def data(self) -> np.ndarray:
         return self._data
 
-    def rotate(self, axis: Point, angle: float):
-        versor = Quaternion.versor(axis, angle)
-        for i in range(len(self._data)):
-            x, y, z = self._data[i, :]
-            rotated_vertex = Quaternion.rotate(Point(x, y, z), versor).to_array()
-            self._data[i, :] = rotated_vertex
+    def rotate(self, axis: Point, angle: float, use_quaternions: bool = True):
+        if use_quaternions:
+            versor = Quaternion.versor(axis, angle)
+            for i in range(len(self._data)):
+                x, y, z = self._data[i, :]
+                point = Point(x, y, z)
+                point = Quaternion.rotate(point, versor).to_array()
+                self._data[i, :] = point
+        else:
+            R = Matrix.rotation([axis.x, axis.y, axis.z], angle)
+            for i in range(len(self._data)):
+                self._data[i, :] = np.dot(R, self._data[i, :])
 
     def distance(self, point: Point) -> float:
         data = self._data
@@ -48,6 +55,9 @@ class Vertices:
         xyzs = np.asarray(low_pcd.points) * scale
         dx, dy, dz = shift.x, shift.y, shift.z
         return Vertices([Point(v[0] + dx, v[1] + dy, v[2] + dz) for v in xyzs])
+
+    def __len__(self) -> int:
+        return self._data.shape[0]
 
     def __repr__(self) -> str:
         return f"{self._data}"

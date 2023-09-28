@@ -26,49 +26,35 @@ class Quaternion:
     def d(self) -> float:
         return self._d
 
-    def _to_point(self) -> Point:
-        return Point(self._b, self._c, self._d)
-
-    def __mul__(self, q):
-        a = self.a * q.a - self.b * q.b - self.c * q.c - self.d * q.d
-        b = self.a * q.b + self.b * q.a + self.c * q.d - self.d * q.c
-        c = self.a * q.c - self.b * q.d + self.c * q.a + self.d * q.b
-        d = self.a * q.d + self.b * q.c - self.c * q.b + self.d * q.a
-        return Quaternion(a, b, c, d)
-
-    def squared_norm(self) -> float:
-        a = self._a
-        b = self._b
-        c = self._c
-        d = self._d
-        return a * a + b * b + c * c + d * d
-
     @staticmethod
-    def conjugate(vertex: Point, quaternion: "Quaternion") -> "Quaternion":
-        reciprocal = quaternion.reciprocal()
-        vertex_as_quaternion = Quaternion(0, vertex.x, vertex.y, vertex.z)
-        return quaternion * vertex_as_quaternion * reciprocal
-
-    def reciprocal(self) -> "Quaternion":
-        one_over_sn = 1 / self.squared_norm()
-        a = self._a
-        b = self._b
-        c = self._c
-        d = self._d
-        return Quaternion(
-            a * one_over_sn, -b * one_over_sn, -c * one_over_sn, -d * one_over_sn
-        )
-
-    @staticmethod
-    def versor(axis: Point, angle: float) -> "Quaternion":
-        mid_angle = angle * 0.5
+    def versor(axis: Point, theta: float) -> "Quaternion":
+        mid_angle = theta * 0.5
         sin = math.sin(mid_angle)
         cos = math.cos(mid_angle)
         return Quaternion(cos, sin * axis.x, sin * axis.y, sin * axis.z)
 
     @staticmethod
-    def rotate(vertex: Point, versor: "Quaternion") -> Point:
-        return Quaternion.conjugate(vertex, versor)._to_point()
+    def rotate(point: Point, versor: "Quaternion") -> Point:
+        x = point.x
+        y = point.y
+        z = point.z
+        a = versor.a
+        b = versor.b
+        c = versor.c
+        d = versor.d
+        t2 = a * b
+        t3 = a * c
+        t4 = a * d
+        t5 = -b * b
+        t6 = b * c
+        t7 = b * d
+        t8 = -c * c
+        t9 = c * d
+        t10 = -d * d
+        x_ = 2 * ((t8 + t10) * x + (t6 - t4) * y + (t3 + t7) * z) + x
+        y_ = 2 * ((t4 + t6) * x + (t5 + t10) * y + (t9 - t2) * z) + y
+        z_ = 2 * ((t7 - t3) * x + (t2 + t9) * y + (t5 + t8) * z) + z
+        return Point(x_, y_, z_)
 
     def __repr__(self) -> str:
         return f"a={self.a}, b={self.b}, c={self.c}, d={self.d}"

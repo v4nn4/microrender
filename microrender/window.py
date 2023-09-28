@@ -1,14 +1,8 @@
-from typing import Callable
+from typing import Tuple
 
 import numpy as np
-from PIL import Image
 
-from .point import Point
 from .vertices import Vertices
-
-
-def gaussian_kernel(beta: float) -> Callable[[float], float]:
-    return lambda x: np.exp(-beta * x * x)
 
 
 class Window:
@@ -16,20 +10,19 @@ class Window:
         self._width = width
         self._height = height
 
-    def _to_world_point(self, i: int, j: int) -> Point:
-        x = (i - self._width / 2) / self._width
-        y = (j - self._height / 2) / self._height
-        return Point(x, y, 0)
+    def world_to_view(self, x: float, y: float) -> Tuple[int, int]:
+        return (
+            np.floor(self._width * x + self._width / 2).astype(int),
+            np.floor(self._height * y + self._height / 2).astype(int),
+        )
 
-    def render(self, vertices: Vertices, beta=10000):
+    def render(self, vertices: Vertices) -> np.ndarray:
         width = self._width
         height = self._height
-        window = np.zeros(shape=(width, height, 3), dtype=np.uint8)
-        kernel = gaussian_kernel(beta)
-        for i in range(width):
-            for j in range(height):
-                point = self._to_world_point(i, j)
-                distance = vertices.distance(point)
-                color = np.clip(kernel(distance) * 255, 0, 255)
-                window[i, j, :] = [color] * 3
-        return Image.fromarray(window)
+        window = np.zeros(shape=(width, height, 3), dtype=np.uint8) * 255
+        for vertex in vertices.data:
+            i, j = self.world_to_view(vertex[0], vertex[1])
+            i, j = np.clip(i, 0, width - 1), np.clip(j, 0, height - 1)
+            window[i, j, :] = [255] * 3
+        inverted_window = 255 - window  # black over white
+        return inverted_window

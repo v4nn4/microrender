@@ -1,6 +1,6 @@
 from microrender.point import Point
-from microrender.window import Window
 from microrender.vertices import Vertices
+from microrender.window import Window
 
 
 def test_rendering():

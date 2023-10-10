@@ -26,11 +26,16 @@ class Window:
         width = self._width
         height = self._height
         window = np.zeros(shape=(width, height, 3), dtype=np.uint8)
-        positions = self.world_to_positions(vertices)
+        positions = self.world_to_positions(vertices)  # (W, H)
+        positions = np.stack(
+            (
+                np.clip(positions[:, 0], 0, self._width),
+                np.clip(positions[:, 1], 0, self._height),
+            ),
+            axis=-1,
+        )
         for position in positions:
             i, j = position[0], position[1]
-            i = np.clip(i, 0, self._width)
-            j = np.clip(j, 0, self._height)
             window[i, j, :] = [255] * 3
         inverted_window = 255 - window  # black over white
         return inverted_window

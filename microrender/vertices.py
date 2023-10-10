@@ -21,8 +21,7 @@ class Vertices:
         return self._data
 
     def rotate(self, rotatable: Rotatable):
-        for i in range(len(self._data)):
-            self._data[i, :] = rotatable.rotate(self._data[i, :])
+        self._data = rotatable.rotate(self._data.T).T
 
     def distance(self, point: np.ndarray) -> float:
         data = self._data

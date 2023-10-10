@@ -8,7 +8,7 @@ class Window:
         self._width = width
         self._height = height
 
-    def world_to_positions(self, vertices: Vertices) -> np.ndarray:
+    def world_to_view(self, vertices: Vertices) -> np.ndarray:
         """Converts the (x, y) world coordinates to (i, j) pixel positions
 
         Formula:
@@ -25,16 +25,29 @@ class Window:
         """Initialize view to 0s, only paint pixels corresponding to vertices"""
         width = self._width
         height = self._height
+
+        # Initialize pixels to white
         window = np.zeros(shape=(width, height, 3), dtype=np.uint8)
-        positions = self.world_to_positions(vertices)  # (W, H)
-        positions = np.stack(
-            (
-                np.clip(positions[:, 0], 0, width),
-                np.clip(positions[:, 1], 0, height),
-            ),
-            axis=-1,
-        )
-        color = np.array([255, 255, 255])  # black
-        window[positions[:, 0], positions[:, 1], :] = color
-        inverted_window = 255 - window  # black over white
+
+        # Convert world coordinates to view coordinates (window indices)
+        pixels = self.world_to_view(vertices)
+
+        # Keep only pixels visible in the window
+        pixels = pixels[
+            np.logical_and(
+                np.logical_and(pixels[:, 0] >= 0, pixels[:, 0] < width),
+                np.logical_and(
+                    pixels[:, 1] >= 0,
+                    pixels[:, 1] < height,
+                ),
+            )
+        ]
+
+        # Paint window in white at pixels' location
+        color = np.array([255, 255, 255])  # white
+        window[pixels[:, 0], pixels[:, 1], :] = color
+
+        # Invert colors
+        inverted_window = 255 - window
+
         return inverted_window

@@ -1,0 +1,9 @@
+name: microrender
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - pip:
+    - open3d
+    - ipykernel
+    - pytest

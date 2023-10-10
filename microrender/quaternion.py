@@ -1,5 +1,7 @@
 import math
 
+import numpy as np
+
 from .point import Point
 
 
@@ -9,6 +11,7 @@ class Quaternion:
         self._b = b
         self._c = c
         self._d = d
+        self.initialize_rotation_matrix()
 
     @property
     def a(self) -> float:
@@ -26,22 +29,11 @@ class Quaternion:
     def d(self) -> float:
         return self._d
 
-    @staticmethod
-    def versor(axis: Point, theta: float) -> "Quaternion":
-        mid_angle = theta * 0.5
-        sin = math.sin(mid_angle)
-        cos = math.cos(mid_angle)
-        return Quaternion(cos, sin * axis.x, sin * axis.y, sin * axis.z)
-
-    @staticmethod
-    def rotate(point: Point, versor: "Quaternion") -> Point:
-        x = point.x
-        y = point.y
-        z = point.z
-        a = versor.a
-        b = versor.b
-        c = versor.c
-        d = versor.d
+    def initialize_rotation_matrix(self):
+        a = self.a
+        b = self.b
+        c = self.c
+        d = self.d
         t2 = a * b
         t3 = a * c
         t4 = a * d
@@ -51,10 +43,23 @@ class Quaternion:
         t8 = -c * c
         t9 = c * d
         t10 = -d * d
-        x_ = 2 * ((t8 + t10) * x + (t6 - t4) * y + (t3 + t7) * z) + x
-        y_ = 2 * ((t4 + t6) * x + (t5 + t10) * y + (t9 - t2) * z) + y
-        z_ = 2 * ((t7 - t3) * x + (t2 + t9) * y + (t5 + t8) * z) + z
-        return Point(x_, y_, z_)
+        self._R = np.array(
+            [
+                [1 + 2 * (t8 + t10), 2 * (t6 - t4), 2 * (t3 + t7)],
+                [2 * (t4 + t6), 1 + 2 * (t5 + t10), 2 * (t9 - t2)],
+                [2 * (t7 - t3), 2 * (t2 + t9), 1 + 2 * (t5 + t8)],
+            ]
+        )
+
+    @staticmethod
+    def versor(axis: Point, theta: float) -> "Quaternion":
+        mid_angle = theta * 0.5
+        sin = math.sin(mid_angle)
+        cos = math.cos(mid_angle)
+        return Quaternion(cos, sin * axis.x, sin * axis.y, sin * axis.z)
+
+    def rotate(self, point: np.ndarray) -> np.ndarray:
+        return np.dot(self._R, point)
 
     def __repr__(self) -> str:
         return f"a={self.a}, b={self.b}, c={self.c}, d={self.d}"

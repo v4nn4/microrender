@@ -29,19 +29,16 @@ class Vertices:
         if use_quaternions:
             versor = Quaternion.versor(axis, angle)
             for i in range(len(self._data)):
-                x, y, z = self._data[i, :]
-                point = Point(x, y, z)
-                point = Quaternion.rotate(point, versor).to_array()
+                point = versor.rotate(self._data[i, :])
                 self._data[i, :] = point
         else:
             R = Matrix.rotation([axis.x, axis.y, axis.z], angle)
             for i in range(len(self._data)):
                 self._data[i, :] = np.dot(R, self._data[i, :])
 
-    def distance(self, point: Point) -> float:
+    def distance(self, point: np.ndarray) -> float:
         data = self._data
-        array = point.to_array()
-        return np.min(np.sqrt(((data - array) * (data - array)).sum(axis=1)))
+        return np.min(np.sqrt(((data - point) * (data - point)).sum(axis=1)))
 
     @staticmethod
     def from_ply(

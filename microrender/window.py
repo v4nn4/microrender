@@ -29,13 +29,12 @@ class Window:
         positions = self.world_to_positions(vertices)  # (W, H)
         positions = np.stack(
             (
-                np.clip(positions[:, 0], 0, self._width),
-                np.clip(positions[:, 1], 0, self._height),
+                np.clip(positions[:, 0], 0, width),
+                np.clip(positions[:, 1], 0, height),
             ),
             axis=-1,
         )
-        for position in positions:
-            i, j = position[0], position[1]
-            window[i, j, :] = [255] * 3
+        color = np.array([255, 255, 255])  # black
+        window[positions[:, 0], positions[:, 1], :] = color
         inverted_window = 255 - window  # black over white
         return inverted_window

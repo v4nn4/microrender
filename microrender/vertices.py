@@ -1,11 +1,7 @@
-import typing
-
 import numpy as np
 import open3d as o3d
 
-from .matrix import Matrix
-from .point import Point
-from .quaternion import Quaternion
+from .rotatable import Rotatable
 
 
 class Vertices:
@@ -13,28 +9,20 @@ class Vertices:
     Set of points represented by an array of shape (nb_points, 3)
     """
 
-    def __init__(self, vertices: typing.List[Point]):
-        assert isinstance(vertices, list)
-        for point in vertices:
-            assert isinstance(point, Point)
-        self._data = np.zeros(shape=(len(vertices), 3), dtype=float)
-        for i, point in enumerate(vertices):
-            self._data[i, :] = point.to_array()
+    def __init__(self, data: np.ndarray):
+        assert len(data.shape) == 2
+        N, D = data.shape
+        assert D == 3  # 3d
+        assert N > 1, "Need at least one point"
+        self._data = data
 
     @property
     def data(self) -> np.ndarray:
         return self._data
 
-    def rotate(self, axis: Point, angle: float, use_quaternions: bool = True):
-        if use_quaternions:
-            versor = Quaternion.versor(axis, angle)
-            for i in range(len(self._data)):
-                point = versor.rotate(self._data[i, :])
-                self._data[i, :] = point
-        else:
-            R = Matrix.rotation([axis.x, axis.y, axis.z], angle)
-            for i in range(len(self._data)):
-                self._data[i, :] = np.dot(R, self._data[i, :])
+    def rotate(self, rotatable: Rotatable):
+        for i in range(len(self._data)):
+            self._data[i, :] = rotatable.rotate(self._data[i, :])
 
     def distance(self, point: np.ndarray) -> float:
         data = self._data
@@ -44,14 +32,13 @@ class Vertices:
     def from_ply(
         filename: str,
         scale: float = 1.0,
-        shift: Point = Point(0, 0, 0),
+        shift: np.ndarray = np.zeros(3),
         voxel_size: float = 0.01,
     ) -> "Vertices":
         pcd = o3d.io.read_point_cloud(filename)
         low_pcd = pcd.voxel_down_sample(voxel_size)  # downsample
-        xyzs = np.asarray(low_pcd.points) * scale
-        dx, dy, dz = shift.x, shift.y, shift.z
-        return Vertices([Point(v[0] + dx, v[1] + dy, v[2] + dz) for v in xyzs])
+        data = np.asarray(low_pcd.points) * scale + shift
+        return Vertices(data)
 
     def __len__(self) -> int:
         return self._data.shape[0]

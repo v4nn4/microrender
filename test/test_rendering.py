@@ -1,9 +1,7 @@
 import numpy as np
 import pytest
 
-from microrender.point import Point
-from microrender.vertices import Vertices
-from microrender.window import Window
+from microrender import Vertices, Quaternion, Matrix, Window
 
 
 @pytest.mark.parametrize("use_quaternions", [True, False])
@@ -11,17 +9,19 @@ def test_rendering(use_quaternions: bool):
     width, height = 50, 50
     window = Window(width, height)
     vertices = Vertices(
-        [
-            Point(0.25, 0.0, 0.0),
-            Point(-0.25, 0.0, 0.0),
-            Point(0.0, 0.25, 0.0),
-            Point(0.0, -0.25, 0.0),
-        ]
+        np.array(
+            [[0.25, 0.0, 0.0], [-0.25, 0.0, 0.0], [0.0, 0.25, 0.0], [0.0, -0.25, 0.0]]
+        )
     )
     array = window.render(vertices)
     assert array.shape == (width, height, 3)
-    rotation_axis, angle = Point(0, 0, 1), 0.1
-    vertices.rotate(rotation_axis, angle, use_quaternions)
+    rotation_axis, angle = np.array([0, 0, 1]), 0.1
+    rotatable = (
+        Quaternion.rotatable(rotation_axis, angle)
+        if use_quaternions
+        else Matrix.rotatable(rotation_axis, angle)
+    )
+    vertices.rotate(rotatable)
     rotated_array = window.render(vertices)
     assert array.shape == (width, height, 3)
     assert np.not_equal(array, rotated_array).any()
@@ -29,17 +29,24 @@ def test_rendering(use_quaternions: bool):
 
 @pytest.mark.parametrize("use_quaternions", [True, False])
 def test_rotation_undo(use_quaternions: bool):
-    rotation_axis, angle = Point(0, 0, 1), 0.1
+    rotation_axis, angle = np.array([0, 0, 1]), 0.1
     vertices = Vertices(
-        [
-            Point(0.25, 0.0, 0.0),
-            Point(-0.25, 0.0, 0.0),
-            Point(0.0, 0.25, 0.0),
-            Point(0.0, -0.25, 0.0),
-        ]
+        np.array(
+            [[0.25, 0.0, 0.0], [-0.25, 0.0, 0.0], [0.0, 0.25, 0.0], [0.0, -0.25, 0.0]]
+        )
     )
-    vertices.rotate(rotation_axis, angle, use_quaternions)
-    vertices.rotate(rotation_axis, -angle, use_quaternions)
+    rotatable = (
+        Quaternion.rotatable(rotation_axis, angle)
+        if use_quaternions
+        else Matrix.rotatable(rotation_axis, angle)
+    )
+    vertices.rotate(rotatable)
+    rotatable = (
+        Quaternion.rotatable(rotation_axis, -angle)
+        if use_quaternions
+        else Matrix.rotatable(rotation_axis, -angle)
+    )
+    vertices.rotate(rotatable)
     assert vertices.data[0][0] == 0.25
     assert vertices.data[1][0] == -0.25
     assert vertices.data[2][1] == 0.25
@@ -47,15 +54,15 @@ def test_rotation_undo(use_quaternions: bool):
 
 
 def test_quaternion_rotation():
-    rotation_axis, angle = Point(0, 0, 1), 0.1
-    points = [
-        Point(0.25, 0.0, 0.0),
-        Point(-0.25, 0.0, 0.0),
-        Point(0.0, 0.25, 0.0),
-        Point(0.0, -0.25, 0.0),
-    ]
+    rotation_axis, angle = np.array([0, 0, 1]), 0.1
+    points = np.array(
+        [[0.25, 0.0, 0.0], [-0.25, 0.0, 0.0], [0.0, 0.25, 0.0], [0.0, -0.25, 0.0]]
+    )
+    points_copy = points.copy()
     vertices = Vertices(points)
-    vertices.rotate(rotation_axis, angle, use_quaternions=True)
-    vertices_copy = Vertices(points.copy())
-    vertices_copy.rotate(rotation_axis, angle, use_quaternions=False)
+    rotatable = Quaternion.rotatable(rotation_axis, angle)
+    vertices.rotate(rotatable)
+    vertices_copy = Vertices(points_copy)
+    rotatable = Matrix.rotatable(rotation_axis, angle)
+    vertices_copy.rotate(rotatable)
     assert (vertices.data == vertices_copy.data).all()

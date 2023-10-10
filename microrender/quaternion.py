@@ -2,10 +2,10 @@ import math
 
 import numpy as np
 
-from .point import Point
+from .rotatable import Rotatable
 
 
-class Quaternion:
+class Quaternion(Rotatable):
     def __init__(self, a: float, b: float, c: float, d: float):
         self._a = a
         self._b = b
@@ -52,11 +52,13 @@ class Quaternion:
         )
 
     @staticmethod
-    def versor(axis: Point, theta: float) -> "Quaternion":
+    def rotatable(axis: np.ndarray, theta: float) -> Rotatable:
+        axis = np.asarray(axis)
         mid_angle = theta * 0.5
         sin = math.sin(mid_angle)
         cos = math.cos(mid_angle)
-        return Quaternion(cos, sin * axis.x, sin * axis.y, sin * axis.z)
+        axis_sin = sin * axis
+        return Quaternion(cos, axis_sin[0], axis_sin[1], axis_sin[2])
 
     def rotate(self, point: np.ndarray) -> np.ndarray:
         return np.dot(self._R, point)

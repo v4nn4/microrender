@@ -1,6 +1,6 @@
 # microrender
 
-A tiny 3d rendering engine
+Tiny 3d rendering engine.
 
 ## Installation
 

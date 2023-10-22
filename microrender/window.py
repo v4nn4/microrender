@@ -4,6 +4,8 @@ from .vertices import Vertices
 
 
 class Window:
+    """Renders pixels to screen"""
+
     def __init__(self, width: int, height: int):
         self._width = width
         self._height = height

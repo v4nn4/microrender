@@ -1,9 +1,13 @@
 name: microrender
 dependencies:
-  - python=3.10
+  - python=3.10  # open3d requires <=3.10
   - pip
   - numpy
+  - ipykernel
+  - matplotlib
+  - pytest
   - pip:
     - open3d
-    - ipykernel
-    - pytest
+    - black
+    - isort
+    - nbqa

@@ -6,6 +6,8 @@ from .rotatable import Rotatable
 
 
 class Matrix(Rotatable):
+    """Rotates vertices using rotation matrices"""
+
     def __init__(self, matrix: np.ndarray):
         self._matrix = matrix
 

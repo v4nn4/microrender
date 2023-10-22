@@ -6,6 +6,8 @@ from .rotatable import Rotatable
 
 
 class Quaternion(Rotatable):
+    """Rotates vertices using quaternion operations"""
+
     def __init__(self, a: float, b: float, c: float, d: float):
         self._a = a
         self._b = b
